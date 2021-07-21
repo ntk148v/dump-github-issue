@@ -23,7 +23,7 @@ jobs:
 
     steps:
     - name: Dump Github issue
-      uses: ntk148v/dump-github-isse@master
+      uses: ntk148v/dump-github-issue@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}
+        repository: ntk148v/dump-github-issue
