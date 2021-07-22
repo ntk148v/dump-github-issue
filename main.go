@@ -78,16 +78,15 @@ func main() {
 	if err := markdown.Convert([]byte(*issue.Body), &buf, parser.WithContext(context)); err != nil {
 		githubactions.Fatalf("unable to convert issue body: %s", err)
 	}
+
 	metaData := meta.Get(context)
 	pathInt, ok := metaData["path"]
 	if !ok {
 		githubactions.Fatalf("invalid issue format")
 	}
 	path := pathInt.(string)
-	githubactions.Infof(path)
 
 	if currContent, err := os.ReadFile(path); err != nil {
-		githubactions.Infof("create directory %s", filepath.Dir(path))
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 			githubactions.Fatalf("unable to create directory %s", filepath.Dir(path))
 		}
@@ -97,8 +96,8 @@ func main() {
 			os.Exit(0)
 		}
 	}
-	githubactions.Infof("write file %s", path)
 	if err := os.WriteFile(path, []byte(*issue.Body), 0644); err != nil {
 		githubactions.Errorf("unable to write file: %s", path)
 	}
+	githubactions.SetEnv("OUTPUT_PATH", path)
 }

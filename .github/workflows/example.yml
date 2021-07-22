@@ -29,4 +29,4 @@ jobs:
         repository: ${{ github.repository }}
         issue-number: ${{ github.event.issue.number }}
     - run:
-        ls -la
+        ls -la "${{ env.OUTPUT_PATH }}"
