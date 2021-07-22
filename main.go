@@ -67,24 +67,30 @@ func main() {
 	for _, issue := range issues {
 		var buf bytes.Buffer
 		context := parser.NewContext()
+		githubactions.Debugf("parse issue %s", *issue.Title)
 		if err := markdown.Convert([]byte(*issue.Body), &buf, parser.WithContext(context)); err != nil {
-			githubactions.Fatalf("unable to convert issue body: %s", err)
+			githubactions.Errorf("unable to convert issue body: %s", err)
+			continue
 		}
 		metaData := meta.Get(context)
 		if pathInt, ok := metaData["path"]; ok {
 			path := pathInt.(string)
 			if currContent, err := os.ReadFile(path); err != nil {
 				if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-					githubactions.Fatalf("unable to create directory: %s", filepath.Dir(path))
+					githubactions.Errorf("unable to create directory: %s", filepath.Dir(path))
+					continue
 				}
 			} else {
 				if strings.Compare(string(currContent), *issue.Body) == 0 {
+					githubactions.Debugf("file %s exists with the same content, skip it", path)
 					continue
 				}
 			}
 			if err := os.WriteFile(path, []byte(*issue.Body), 0644); err != nil {
-				githubactions.Fatalf("unable to write file: %s", path)
+				githubactions.Errorf("unable to write file: %s", path)
 			}
+			continue
 		}
+		githubactions.Debugf("invalid issue %s", *issue.Title)
 	}
 }
