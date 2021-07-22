@@ -20,7 +20,10 @@ inputs:
     description: "Github Token with commit access"
     required: true
   repository:
-    description: "Github repostitory to get issues"
+    description: "Github repostitory to get issues (full name, for example: ntk148v/testing)"
+    required: true
+  issue-number:
+    description: "Github issue from repository to dump"
     required: true
 runs:
   using: "docker"

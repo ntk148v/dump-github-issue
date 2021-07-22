@@ -15,7 +15,7 @@
 name: Example
 on:
   issues:
-    types: [opended, edited]
+    types: [opened, edited]
 
 jobs:
   example_job:
@@ -26,6 +26,7 @@ jobs:
       uses: ntk148v/dump-github-issue@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        repository: ntk148v/dump-github-issue
+        repository: ${{ github.repository.full_name }}
+        issue-number: ${{ github.issue.number }}
     - run:
         ls -la

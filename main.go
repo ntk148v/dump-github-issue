@@ -18,6 +18,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/github"
@@ -39,7 +40,11 @@ func main() {
 	if githubToken == "" {
 		githubactions.Fatalf("missing input 'github-token'")
 	}
-	githubactions.Infof("it works? right?")
+	issueNumber, err := strconv.Atoi(githubactions.GetInput("issue-number"))
+	if issueNumber == 0 || err != nil {
+		githubactions.Fatalf("missing input 'issue-number'")
+	}
+
 	// Create github client
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -49,10 +54,10 @@ func main() {
 
 	client := github.NewClient(tc)
 	ownerRepo := strings.Split(repository, "/")
-	// list all issues by repo
-	issues, _, err := client.Issues.ListByRepo(ctx, ownerRepo[0], ownerRepo[1], &github.IssueListByRepoOptions{})
+	// Get issue by number
+	issue, _, err := client.Issues.Get(ctx, ownerRepo[0], ownerRepo[1], issueNumber)
 	if err != nil {
-		githubactions.Fatalf("unable to list issues by repo: %s", err)
+		githubactions.Fatalf("unable to get issue %d of repo %s: %s", issueNumber, repository, err)
 	}
 	// markdown parser
 	markdown := goldmark.New(
@@ -65,33 +70,29 @@ func main() {
 			html.WithXHTML(),
 		),
 	)
-	for _, issue := range issues {
-		var buf bytes.Buffer
-		context := parser.NewContext()
-		githubactions.Infof("parse issue %s", *issue.Title)
-		if err := markdown.Convert([]byte(*issue.Body), &buf, parser.WithContext(context)); err != nil {
-			githubactions.Errorf("unable to convert issue body: %s", err)
-			continue
+
+	// Parse issue
+	var buf bytes.Buffer
+	context := parser.NewContext()
+	githubactions.Infof("parse issue '%s'\n", *issue.Title)
+	if err := markdown.Convert([]byte(*issue.Body), &buf, parser.WithContext(context)); err != nil {
+		githubactions.Fatalf("unable to convert issue body: %s", err)
+	}
+	metaData := meta.Get(context)
+	pathInt, ok := metaData["path"]
+	if !ok {
+		githubactions.Fatalf("invalid issue format")
+	}
+	path := pathInt.(string)
+
+	if currContent, err := os.ReadFile(path); err != nil {
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			githubactions.Fatalf("unable to create directory %s", filepath.Dir(path))
 		}
-		metaData := meta.Get(context)
-		if pathInt, ok := metaData["path"]; ok {
-			path := pathInt.(string)
-			if currContent, err := os.ReadFile(path); err != nil {
-				if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-					githubactions.Errorf("unable to create directory: %s", filepath.Dir(path))
-					continue
-				}
-			} else {
-				if strings.Compare(string(currContent), *issue.Body) == 0 {
-					githubactions.Debugf("file %s exists with the same content, skip it", path)
-					continue
-				}
-			}
-			if err := os.WriteFile(path, []byte(*issue.Body), 0644); err != nil {
-				githubactions.Errorf("unable to write file: %s", path)
-			}
-			continue
+	} else {
+		if strings.Compare(string(currContent), *issue.Body) == 0 {
+			githubactions.Warningf("file %s exists with the same content, skip it\n", path)
+			os.Exit(0)
 		}
-		githubactions.Debugf("invalid issue %s", *issue.Title)
 	}
 }
