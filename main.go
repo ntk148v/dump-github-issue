@@ -84,8 +84,10 @@ func main() {
 		githubactions.Fatalf("invalid issue format")
 	}
 	path := pathInt.(string)
+	githubactions.Infof(path)
 
 	if currContent, err := os.ReadFile(path); err != nil {
+		githubactions.Infof("create directory %s", filepath.Dir(path))
 		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 			githubactions.Fatalf("unable to create directory %s", filepath.Dir(path))
 		}
@@ -94,5 +96,9 @@ func main() {
 			githubactions.Warningf("file %s exists with the same content, skip it\n", path)
 			os.Exit(0)
 		}
+	}
+	githubactions.Infof("write file %s", path)
+	if err := os.WriteFile(path, []byte(*issue.Body), 0644); err != nil {
+		githubactions.Errorf("unable to write file: %s", path)
 	}
 }
