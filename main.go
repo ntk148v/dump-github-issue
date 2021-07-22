@@ -39,6 +39,7 @@ func main() {
 	if githubToken == "" {
 		githubactions.Fatalf("missing input 'github-token'")
 	}
+	githubactions.Infof("it works? right?")
 	// Create github client
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -67,7 +68,7 @@ func main() {
 	for _, issue := range issues {
 		var buf bytes.Buffer
 		context := parser.NewContext()
-		githubactions.Debugf("parse issue %s", *issue.Title)
+		githubactions.Infof("parse issue %s", *issue.Title)
 		if err := markdown.Convert([]byte(*issue.Body), &buf, parser.WithContext(context)); err != nil {
 			githubactions.Errorf("unable to convert issue body: %s", err)
 			continue
