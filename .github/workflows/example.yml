@@ -22,11 +22,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Checkout
+        uses: actions/checkout@v2
+
     - name: Dump Github issue
       uses: ntk148v/dump-github-issue@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         repository: ${{ github.repository }}
         issue-number: ${{ github.event.issue.number }}
+
     - run:
-        ls -la "${{ env.OUTPUT_PATH }}"
+        cat "${{ env.OUTPUT_PATH }}"
+
+    - name: Push changes
+        uses: github-actions-x/commit@v2.8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-branch: 'master'
+          commit-message: 'publish'
+          force-add: 'true'
+          rebase: 'true'
+          email: 'kiennt2609@gmail.com'
+          name: 'Kien Nguyen-Tuan'
