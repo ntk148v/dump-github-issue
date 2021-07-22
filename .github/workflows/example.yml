@@ -36,12 +36,12 @@ jobs:
         cat "${{ env.OUTPUT_PATH }}"
 
     - name: Push changes
-        uses: github-actions-x/commit@v2.8
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          push-branch: 'master'
-          commit-message: 'publish'
-          force-add: 'true'
-          rebase: 'true'
-          email: 'kiennt2609@gmail.com'
-          name: 'Kien Nguyen-Tuan'
+      uses: github-actions-x/commit@v2.8
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        push-branch: 'master'
+        commit-message: 'publish'
+        force-add: 'true'
+        rebase: 'true'
+        email: 'kiennt2609@gmail.com'
+        name: 'Kien Nguyen-Tuan'
